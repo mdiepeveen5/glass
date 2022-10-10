@@ -1,4 +1,5 @@
 load(file = "corrnatot.Rdata")
+library(ggrepel)
 
 
 library("ggpmisc")
@@ -33,7 +34,8 @@ ggplot(corrnatot, aes (x= order1, y= correlation, color = colors, label = gene))
   geom_point(data = subset(corrnatot, group == '0' & Status != "Imputed Correlation"), size=2) +
   scale_color_manual(values=c("chartreuse","blue4", "yellow"))+
   theme_bw()+
-  labs(title = "Correlation vs Random Correlation", color='Correlation')+
+  labs(title = "Correlation vs Random Correlation", color='Correlation', size = 40)+
+  theme(plot.title = element_text(size = 18))  +
   xlab("Order")+
   ylab("Correlation")
 
@@ -381,6 +383,7 @@ rm(protRNAprothigh, RNARNAprothigh, highprotexpr, highRNAexpr, corRNAprotOLD)
 rm(orderRNA, orderprot, orderprotRNA, corRNA, corprot)
 
 rm(hclustprot, hclustprotRNA, hclustRNA)
+
 
 
 

@@ -8,7 +8,6 @@ colnames(tmp) <- gsub(".Aligned.+bam$","",gsub("^X.+new.","",colnames(tmp)))
 
 # load RNAseq ----
 # patient met read counts < 750.000 eruit scoopt en opnieuw
-
 readcounts <- tmp %>% 
   dplyr::mutate(Chr=NULL) %>% 
   dplyr::mutate(Start=NULL) %>% 

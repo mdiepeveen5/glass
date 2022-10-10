@@ -1,3 +1,4 @@
+library(tidyr)
 #Correlation with genelength
 #Needs corRNAprotNASPEAR, gene.annot2, interprotRNA
 
@@ -52,7 +53,11 @@ rm(StartNew)
 ggplot(chromosomelength, aes(x = log(1+GeneLength), y = correlation))+
   geom_point()+
   geom_smooth(method = lm)+
-  theme_bw()
+  theme_bw()+
+  labs (title = "Correlation increase with gene length", x= "Gene length" , y = "Correlation")+
+  stat_poly_eq()+
+  stat_poly_line()
+  
 
 
 #slope(lengthandcor$Length, lengthandcor$correlation)

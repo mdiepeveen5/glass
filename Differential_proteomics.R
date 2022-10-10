@@ -447,9 +447,10 @@ ggplot(volcanodiffprot, aes(logFC, -log10(adj.P.Val))) + #volcanoplot with log2F
   geom_hline(yintercept=1.3, linetype="dashed")+
   geom_vline(xintercept = 0.75, linetype="dashed")+
   geom_vline(xintercept = -0.75, linetype="dashed")+
-  labs(title = 'Differentially expressed genes for proteomics data', subtitle= 'Between methylation classifier LG (n =40) vs HG (n=10)')
+  labs(title = 'Differentially expressed genes for proteomics data', subtitle= 'Between methylation classifier LG (n =40) vs HG (n=10)')+
   xlab('Log fold change')+
-  ylab('-log10(adjusted p-value)')
+  ylab('-log10(adjusted p-value)')+
+  xlim(-2.3,2.3)
 
 
 
@@ -619,6 +620,10 @@ head(design4)
 fit3 <- lmFit(y4, design4)
 fit3 <- eBayes(fit3)
 diffprot3 <- topTable(fit3,sort="none",n=Inf) 
+
+save(diffprot3, file = "diffprot3.Rdata")
+
+write.xlsx(diffprot3, file ="diffprot3.xlsx")
 
 volcanodiffprot2 <- diffprot3 %>% 
   rownames_to_column("gene") %>% 
@@ -809,10 +814,47 @@ diffprotWHO2 <- diffprotWHO %>%
   dplyr::filter(methylation.sub.diagnosis %in% c("O_IDH", "CONTR_HEMI") == F) %>% 
   dplyr::filter(Sample_Name %in% c("AC_GII_131_P", "AC_GII_146_P", "GB_GIV_153_R1") ==F)
 
-design3 <- model.matrix(~diffprotWHO2$methylation.sub.diagnosis)
-head(design3)
+diffprotWHO2_paired <- diffprotWHO2 %>% 
+  dplyr::mutate(Sample_Number = gsub("\\_.*","",Customer_ID)) %>% 
+  dplyr::mutate(Sample_Number = ifelse(Sample_Number %in% c("105","111","113","115","117","122","128","137","146","148","150","156","157","174"), "001", Sample_Number))
 
 
-fit <- lmFit(y3, design3)
-fit <- eBayes(fit)
-diffprot2 <- topTable(fit,sort="none",n=Inf) 
+
+design3_paired <- model.matrix(~diffprotWHO2_paired$Sample_Number + diffprotWHO2_paired$methylation.sub.diagnosis)
+head(design3_paired)
+
+
+fit_paired <- lmFit(y3, design3_paired)
+fit_paired <- eBayes(fit_paired)
+diffprot2_paired <- topTable(fit_paired,sort="none",n=Inf) 
+
+
+
+#patprot
+
+table(diffprotWHO$methylation.sub.diagnosis)
+diffprotWHO$methylation.sub.diagnosis
+
+y3 <- pre_protein_counts_filtered2 %>% 
+  tibble::column_to_rownames("patient_id") %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  dplyr::mutate(GB_GIV_153_R1 = NULL) %>% 
+  dplyr::mutate(AC_GII_131_P = NULL) %>% 
+  dplyr::mutate(AC_GII_146_P = NULL) %>% 
+  dplyr::mutate(AC_GII_136_P = NULL) %>% 
+  dplyr::mutate(AC_GII_141_R1 = NULL)
+
+
+
+table(metadatapatprot$methylation.sub.diagnosis)
+metadatapatprot$methylation.sub.diagnosis
+
+
+design3_paired <- model.matrix(~diffprotWHO2_paired$Sample_Number + diffprotWHO2_paired$methylation.sub.diagnosis)
+head(design3_paired)
+
+
+fit_paired <- lmFit(y3, design3_paired)
+fit_paired <- eBayes(fit_paired)
+diffprot2_paired <- topTable(fit_paired,sort="none",n=Inf) 

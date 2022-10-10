@@ -557,10 +557,41 @@ dds_paired <- DESeq2::DESeqDataSetFromMatrix(countData = readcountsDE,
                                              colData = metadata_DE_paired,
                                              design= ~batch + methylation.sub.diagnosis)
 
-dds_paired <-DESeq(dds_paired)
+dds_paired <-DESeq(dds_paired,parallel=F)
 
 
 deseq2Results_paired <- results(dds_paired) %>% 
+  as.data.frame()%>% 
+  rownames_to_column("gene_id") %>% 
+  left_join(gene.annot2)
+
+
+
+
+##DESEQ OP PATIENTEN DIE IN PROTEOME VOORKOMEN
+readcountspatprot <- readcountsDE %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  rownames_to_column("GS_ID") %>% 
+  dplyr::filter(GS_ID %in% sortpatientid) %>% 
+  column_to_rownames("GS_ID") %>% 
+  t() %>% 
+  as.data.frame()
+
+metadatapatprot <- metadataDE %>% 
+  dplyr::filter(GS_ID %in% sortpatientid)
+
+
+stopifnot(length(colnames(readcountspatprot)) == length(metadatapatprot$GS_ID))
+
+ddspatprot <- DESeq2::DESeqDataSetFromMatrix(countData = readcountspatprot,
+                                       colData = metadatapatprot,
+                                       design= ~methylation.sub.diagnosis)
+ddspatprot <-DESeq(ddspatprot)
+vsdpatprot <- DESeq2::vst(ddspatprot)
+readcount.vstpatprot <- assay(vsdpatprot) %>% as.data.frame 
+
+deseq2Resultspatprot <- results(ddspatprot) %>% 
   as.data.frame()%>% 
   rownames_to_column("gene_id") %>% 
   left_join(gene.annot2)
