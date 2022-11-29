@@ -50,7 +50,7 @@ annotations <- annotations %>%
             TumorPercentage = as.numeric(TumorPercentage),
             Deceased = as.numeric(Deceased))
 
-save(annotations, file = "annotations.Rdata")
+#save(annotations, file = "annotations.Rdata")
 
 annotations_filtered <- inner_join(diffprotWHO2, annotations, by = c("Customer_ID"="Sample_Name")) %>% 
   left_join(WHOclass0305 %>% dplyr::select(Sample_Name, Grade), by = c("Customer_ID"="Sample_Name"))
@@ -277,7 +277,7 @@ survivalclust4 <- survfit(Surv(Survclust4$Survival_FirstRecurrenceSurgery_months
 
 ggsurvplot(survivalclust4, pval = TRUE)
 #0.038
-
+rm(clust4, PCAclust4, PCAdefclust4, PCA_sortedclust4)
 
 ########################
 
@@ -454,3 +454,46 @@ coxsurvival <- rfsrc(Surv(Survallgenes$Survival_FirstRecurrenceSurgery_months, S
 
 
 survivalallgenes <- survfit(Surv(Survallgenes$Survival_FirstRecurrenceSurgery_months, Survallgenes$Deceased)~Type, data = Survallgenes)
+
+
+#############
+
+save(pre_protein_counts_filtered2, file = "pre_protein_counts_filtered2.Rds")
+
+PCNA <- pre_protein_counts_filtered2 %>% 
+  dplyr::select(patient_id,PCNA) %>% 
+  left_join(annotations_filtered %>% dplyr::select(Sample_Name, OS_FirstSurgery_months,Survival_FirstRecurrenceSurgery_months, Deceased, Condition), by = c("patient_id"="Sample_Name")) %>% 
+  drop_na
+
+PCNAR1 <- PCNA %>% 
+  dplyr::filter(Condition == "P") %>% 
+  dplyr::mutate(Type = ifelse(PCNA >6, "High", "Low"))
+
+
+
+
+
+survivalPCAR1 <- survfit(Surv(PCNAR1$OS_FirstSurgery_months, PCNAR1$Deceased)~Type, data = PCNAR1)
+
+ggsurvplot(survivalPCAR1, pval = TRUE)
+
+
+
+
+PCNAR2 <- PCNA %>% 
+  dplyr::filter(Condition == "R") %>% 
+  dplyr::mutate(Type = ifelse(PCNA >6, "High", "Low"))
+
+
+survivalPCAR2 <- survfit(Surv(PCNAR2$Survival_FirstRecurrenceSurgery_months, PCNAR2$Deceased)~Type, data = PCNAR2)
+
+ggsurvplot(survivalPCAR2, pval = TRUE)
+
+
+
+survdiff(Surv(PCNAR2$Survival_FirstRecurrenceSurgery_months, PCNAR2$Deceased)~Type, data = PCNAR2)
+
+str(survdiff(Surv(PCNAR2$Survival_FirstRecurrenceSurgery_months, PCNAR2$Deceased)~Type, data = PCNAR2))
+
+
+#coxph met hazard ratios
