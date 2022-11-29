@@ -126,6 +126,16 @@ rm(corproteinorderedNA, i, a, b)
 #mediancorRNAprotOLD <- median(corRNAprotOLD$correlation)
 #mediancorRNAprotNA <- median(corRNAprotNA$correlation)
 
+
+corRNAprotNASPEAR %>% dplyr::filter(correlation > 0.7)
+corRNAprotNASPEAR %>% dplyr::filter(correlation < 0.7 & correlation >0.5)
+corRNAprotNASPEAR %>% dplyr::filter(correlation < 0.5 & correlation > 0.3)
+corRNAprotNASPEAR %>% dplyr::filter(correlation <0.3 & correlation >= 0 )
+
+corRNAprotNASPEAR %>% dplyr::filter(correlation < -0.5)
+corRNAprotNASPEAR %>% dplyr::filter(correlation >-0.5 & correlation < -0.3)
+corRNAprotNASPEAR %>% dplyr::filter(correlation >-0.3 & correlation <0)
+
 #genen met de hoogste correlatie corplotten
 corRNAprothigh <- corRNAprotNASPEAR %>% 
   dplyr::mutate(correlation.rnd=NULL) %>% 
@@ -158,60 +168,60 @@ corrnatot <- rbind(corrna1, corrna2, corrna3)
 
 
 save (corrnatot, file = "corrnatot.Rdata")
-corrnatot2 <- tibble(corrnatot) %>%  dplyr::left_join(tibble(dge.partially.paired.clusters), by=c('gene'='gene_name')) %>% 
-  dplyr::filter(!is.na(gene_uid)) %>% 
-  dplyr::filter(Status == "Correlation")
+# corrnatot2 <- tibble(corrnatot) %>%  dplyr::left_join(tibble(dge.partially.paired.clusters), by=c('gene'='gene_name')) %>% 
+#   dplyr::filter(!is.na(gene_uid)) %>% 
+#   dplyr::filter(Status == "Correlation")
 
 
+# 
+# #wilcoxon signed rank test
+# Realcor <- corrna3$correlation
+# Randomcor <- corrna2$correlation
+# realvsrandom <- data.frame(
+#   group = rep(c("Real Correlation", "Random Correlation"), each = 3135),
+#   correlation = c(Realcor, Randomcor))
+# 
+# dplyr::group_by(realvsrandom, group) %>% 
+#   summarise(
+#     count = n(),
+#     median = median(correlation),
+#     IQR = IQR(correlation)
+#   )
+# 
+# library("ggpubr")
+# ggboxplot(realvsrandom, x = "group", y = "correlation", 
+#           color = "group", palette = c("#00AFBB", "#E7B800"),
+#           ylab = "Correlation", xlab = "Groups")
+# 
+# wilcoxrealrandom <- wilcox.test(Realcor, Randomcor)
+# 
+# rm(wilcoxrealrandom, realvsrandom)
+# 
 
-#wilcoxon signed rank test
-Realcor <- corrna3$correlation
-Randomcor <- corrna2$correlation
-realvsrandom <- data.frame(
-  group = rep(c("Real Correlation", "Random Correlation"), each = 3135),
-  correlation = c(Realcor, Randomcor))
-
-dplyr::group_by(realvsrandom, group) %>% 
-  summarise(
-    count = n(),
-    median = median(correlation),
-    IQR = IQR(correlation)
-  )
-
-library("ggpubr")
-ggboxplot(realvsrandom, x = "group", y = "correlation", 
-          color = "group", palette = c("#00AFBB", "#E7B800"),
-          ylab = "Correlation", xlab = "Groups")
-
-wilcoxrealrandom <- wilcox.test(Realcor, Randomcor)
-
-rm(wilcoxrealrandom, realvsrandom)
-
-
-#GROUPING
-Yhighrnaexprclust <- as.data.frame(intersect(names(corproteinordered) , dge.partially.paired.clusters$gene_name)) %>% 
-  dplyr::rename(Overlap = "intersect(names(corproteinordered), dge.partially.paired.clusters$gene_name)")
-
-corrnatot$group <- "0"
-corrnatot$group[corrnatot$gene %in% c("LMNB1", "ACTC1", "CDK1", "H4C1", "H2AC4", "H2AC11", "H2BC12", "H1-5", "H2BC17")] <- "up.1"
-corrnatot$group[corrnatot$gene %in% c("COL6A3", "COL6A2", "TGFBI","HSPG2","LUM","FCGBP","CHI3L1","COL1A2","ACAN","VGF","COL4A2","COL1A1")] <- "up.2"
-#corrnatot$group[corrnatot$gene %in% c("AQP1", "FABP5")] <- "up.3"
-corrnatot$group[corrnatot$gene %in% c("MPP6", "OGFRL1", "GJA1", "RGS6")] <- "down"
-
-corrnatot <- corrnatot %>%  dplyr::mutate(colors = ifelse(group == "0", Status, group)) %>% 
-  dplyr::mutate(colors = ifelse(Status == "Random Correlation" & colors != "Random Correlation", Status, colors)) %>% 
-  dplyr::mutate(colors = ifelse(Status == "Correlation" & colors != "Correlation", Status, colors))
-
-##PAPER
-
-corrnatotPAPER <- rbind(corrna1, corrna2)
-corrnatotPAPER$group <- "0"
-corrnatotPAPER$group[corrnatotPAPER$gene %in% c("LMNB1", "ACTC1", "CDK1", "H4C1", "H2AC4", "H2AC11", "H2BC12", "H1-5", "H2BC17")] <- "up.1"
-corrnatotPAPER$group[corrnatotPAPER$gene %in% c("COL6A3", "COL6A2", "TGFBI","HSPG2","LUM","FCGBP","CHI3L1","COL1A2","ACAN","VGF","COL4A2","COL1A1")] <- "up.2"
-#corrnatot$group[corrnatot$gene %in% c("AQP1", "FABP5")] <- "up.3"
-corrnatotPAPER$group[corrnatotPAPER$gene %in% c("MPP6", "OGFRL1", "GJA1", "RGS6")] <- "down"
-
-corrnatotPAPER <- corrnatotPAPER %>%  dplyr::mutate(colors = ifelse(group == "0", Status, group)) %>% 
-  dplyr::mutate(colors = ifelse(Status == "Random Correlation" & colors != "Random Correlation", Status, colors))
-
-save(corrnatotPAPER, file= "corrnatotPAPER.Rdata")
+# #GROUPING
+# Yhighrnaexprclust <- as.data.frame(intersect(names(corproteinordered) , dge.partially.paired.clusters$gene_name)) %>% 
+#   dplyr::rename(Overlap = "intersect(names(corproteinordered), dge.partially.paired.clusters$gene_name)")
+# 
+# corrnatot$group <- "0"
+# corrnatot$group[corrnatot$gene %in% c("LMNB1", "ACTC1", "CDK1", "H4C1", "H2AC4", "H2AC11", "H2BC12", "H1-5", "H2BC17")] <- "up.1"
+# corrnatot$group[corrnatot$gene %in% c("COL6A3", "COL6A2", "TGFBI","HSPG2","LUM","FCGBP","CHI3L1","COL1A2","ACAN","VGF","COL4A2","COL1A1")] <- "up.2"
+# #corrnatot$group[corrnatot$gene %in% c("AQP1", "FABP5")] <- "up.3"
+# corrnatot$group[corrnatot$gene %in% c("MPP6", "OGFRL1", "GJA1", "RGS6")] <- "down"
+# 
+# corrnatot <- corrnatot %>%  dplyr::mutate(colors = ifelse(group == "0", Status, group)) %>% 
+#   dplyr::mutate(colors = ifelse(Status == "Random Correlation" & colors != "Random Correlation", Status, colors)) %>% 
+#   dplyr::mutate(colors = ifelse(Status == "Correlation" & colors != "Correlation", Status, colors))
+# 
+# ##PAPER
+# 
+# corrnatotPAPER <- rbind(corrna1, corrna2)
+# corrnatotPAPER$group <- "0"
+# corrnatotPAPER$group[corrnatotPAPER$gene %in% c("LMNB1", "ACTC1", "CDK1", "H4C1", "H2AC4", "H2AC11", "H2BC12", "H1-5", "H2BC17")] <- "up.1"
+# corrnatotPAPER$group[corrnatotPAPER$gene %in% c("COL6A3", "COL6A2", "TGFBI","HSPG2","LUM","FCGBP","CHI3L1","COL1A2","ACAN","VGF","COL4A2","COL1A1")] <- "up.2"
+# #corrnatot$group[corrnatot$gene %in% c("AQP1", "FABP5")] <- "up.3"
+# corrnatotPAPER$group[corrnatotPAPER$gene %in% c("MPP6", "OGFRL1", "GJA1", "RGS6")] <- "down"
+# 
+# corrnatotPAPER <- corrnatotPAPER %>%  dplyr::mutate(colors = ifelse(group == "0", Status, group)) %>% 
+#   dplyr::mutate(colors = ifelse(Status == "Random Correlation" & colors != "Random Correlation", Status, colors))
+# 
+# save(corrnatotPAPER, file= "corrnatotPAPER.Rdata")

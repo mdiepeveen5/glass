@@ -54,9 +54,22 @@ ggplot(chromosomelength, aes(x = log(1+GeneLength), y = correlation))+
   geom_point()+
   geom_smooth(method = lm)+
   theme_bw()+
-  labs (title = "Correlation increase with gene length", x= "Gene length" , y = "Correlation")+
-  stat_poly_eq()+
+  labs (title = "Correlation increase with gene length", x= "log (1 + Gene length)" , y = "Correlation")+
+  ggpubr::stat_cor(aes(shape = NULL, col= NULL, fill = NULL))+
   stat_poly_line()
+
+pdf("corincreasegenelength.pdf", height = 4, width = 6)
+ggplot(chromosomelength, aes(x = log(1+GeneLength), y = correlation))+
+  geom_point()+
+  geom_smooth(method = lm)+
+  theme_bw()+
+  labs (title = "Correlation increase with gene length", x= "log (1 + Gene length)" , y = "Correlation")+
+  ggpubr::stat_cor(aes(shape = NULL, col= NULL, fill = NULL))+
+  stat_poly_line()
+
+dev.off()
+
+rm(StartNew, minlength, maxlength, maxexon, grouped_lengthandcor, gtf, tmp, gtf2, metadataRNA)
   
 
 

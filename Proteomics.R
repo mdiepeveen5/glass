@@ -3,8 +3,8 @@ library(ggrepel)
 
 
 library("ggpmisc")
-Yhighrnaexprclust <- as.data.frame(intersect(names(corproteinordered) , dge.partially.paired.clusters$gene_name)) %>% 
-  dplyr::rename(Overlap = "intersect(names(corproteinordered), dge.partially.paired.clusters$gene_name)")
+# Yhighrnaexprclust <- as.data.frame(intersect(names(corproteinordered) , dge.partially.paired.clusters$gene_name)) %>% 
+#   dplyr::rename(Overlap = "intersect(names(corproteinordered), dge.partially.paired.clusters$gene_name)")
 
 corrnatot$group <- "0"
 #corrnatot$group[corrnatot$gene %in% c("LMNB1", "ACTC1", "CDK1", "H4C1", "H2AC4", "H2AC11", "H2BC12", "H1-5", "H2BC17")] <- "up.1"
@@ -29,42 +29,50 @@ ggplot(corrnatot, aes (x= order1, y= correlation, color = colors, label = gene))
 
 rm(corrna1, corrna2, corrna3, corrndcompare)
 
-
+pdf("Slangenplot.pdf", width = 10, height = 7)
+#plot correlation and random correlation
 ggplot(corrnatot, aes (x= order1, y= correlation, color = colors, label = gene)) +
   geom_point(data = subset(corrnatot, group == '0' & Status != "Imputed Correlation"), size=2) +
-  scale_color_manual(values=c("chartreuse","blue4", "yellow"))+
+  scale_color_manual(values=c("#008208", "darkblue"))+
   theme_bw()+
-  labs(title = "Correlation vs Random Correlation", color='Correlation', size = 40)+
+  labs(title = "Correlation versus Random Correlation", color='Correlation', size = 40)+
   theme(plot.title = element_text(size = 18))  +
   xlab("Order")+
   ylab("Correlation")
 
+dev.off()
 
 #Example high, low and anticorrelation
 #High correlation
 highcorTNR = cbind(as.data.frame(corRNAordered$TNR), as.data.frame(corproteinorderedNATR$TNR))
-ggplot(highcorGSTM3, aes(x = corRNAordered$TNR, y = corproteinorderedNATR$TNR) )+
-  geom_point() +
+ggplot(highcorTNR, aes(x = corRNAordered$TNR, y = corproteinorderedNATR$TNR) )+
+  geom_point(cor.coef = T) +
+  stat_cor(mapping = NULL, method = "spearman", cor.coef.name = "rho", p.digits = 0)+
   geom_smooth(method = lm)+
   theme_bw()+
   labs (title="Correlation of TNR",
         x ="RNA expression", y = "Protein expression")
 
+
 #No correlation
 nocorFSD1 = cbind(as.data.frame(corRNAordered$FSD1), as.data.frame(corproteinorderedNATR$FSD1))
 ggplot(nocorFSD1, aes(x = corRNAordered$FSD1, y = corproteinorderedNATR$FSD1) )+
   geom_point() +
+  stat_cor(mapping = NULL, method = "spearman", cor.coef.name = "rho")+
   geom_smooth(method = lm)+
   theme_bw()+
   labs (title="Correlation of FSD1",
         x ="RNA expression", y = "Protein expression")
 
-anticorNDUFA13 = cbind(as.data.frame(corRNAordered$NDUFA13), as.data.frame(corproteinorderedNATR$NDUFA13))
-ggplot(anticorNDUFA13, aes(x = corRNAordered$NDUFA13, y = corproteinorderedNATR$NDUFA13) )+
+
+
+anticorTSFM = cbind(as.data.frame(corRNAordered$TSFM), as.data.frame(corproteinorderedNATR$TSFM))
+ggplot(anticorTSFM, aes(x = corRNAordered$TSFM, y = corproteinorderedNATR$TSFM) )+
   geom_point() +
+  stat_cor(mapping = NULL, method = "spearman", cor.coef.name = "rho", p.digits = 0)+
   geom_smooth(method = lm)+
   theme_bw()+
-  labs (title="Correlation of NDUFA13",
+  labs (title="Correlation of TSFM",
         x ="RNA expression", y = "Protein expression")
 
 
@@ -99,13 +107,15 @@ highRNAexprplot <- highRNAexpr %>%
 highRNAcor <- left_join(highRNAexprplot, corRNAprotNASPEAR, by = c("gene_name" = "gene")) %>% 
   dplyr::mutate(correlation.rnd = NULL)
 
+pdf("corincreaseRNAexpr.pdf", height = 4, width = 6)
 ggplot(data = highRNAcor, aes (x = sumrow, y = correlation))+
   geom_point()+
   labs (title = "Correlation increase with RNA expression", x= "Sum of RNA expression per gene", y = "Correlation")+
-  stat_poly_eq()+
+  ggpubr::stat_cor(aes(shape = NULL, col= NULL, fill = NULL))+
   stat_poly_line()+
   theme_bw()
 
+dev.off()
 cor.test(log( 1+highRNAcor$sumrow), highRNAcor$correlation)
 
 rm(highRNAexprplot, highRNAcor, highRNAexpr)
@@ -136,7 +146,9 @@ ggplot(data = highRNAcountcor, aes (x = log(1+meanrow), y = correlation))+
   geom_smooth(method = lm) +
   labs ()+
   xlab ("Meanrow of log (1+ raw RNA count)) expression per gene")+
-  ylab ("Correlation Protein x RNA")
+  ylab ("Correlation Protein x RNA")+
+  ggpubr::stat_cor(aes(shape = NULL, col= NULL, fill = NULL))
+  
 
 cor.test(log( 1+highRNAcountcor$meanrow), highRNAcountcor$correlation)
 
@@ -159,12 +171,16 @@ highRNAzerocountsplot <- highrawRNAzerocounts %>%
 highRNAzerocountcor <- left_join(highRNAzerocountsplot, corRNAprotNASPEAR, by = c("gene_name" = "gene")) %>% 
   dplyr::mutate(correlation.rnd = NULL)
 
+pdf("CorincreaseRNAzero.pdf", height = 4, width = 6)
+
 ggplot(data = highRNAzerocountcor, aes (x = log(1+zeros), y = correlation))+
   geom_point()+
   labs (title = "Correlation increase with RNA zero counts", x= "Number of zero counts per gene (1+log(counts))", y = "Correlation")+
-  stat_poly_eq()+
+  ggpubr::stat_cor(aes(shape = NULL, col= NULL, fill = NULL))+
   stat_poly_line()+
   theme_bw()
+
+dev.off()
 
 cor.test(log( 1+highRNAzerocountcor$zeros), highRNAzerocountcor$correlation)
 
@@ -188,13 +204,16 @@ highprotexprplot <- highprotexpr %>%
 highprotcor <- left_join(highprotexprplot, corRNAprotNASPEAR, by = c("protein_name" = "gene")) %>% 
   dplyr::mutate(correlation.rnd = NULL)
 
+pdf("Corincreaseprotexpr.pdf", height = 4, width = 6)
+
 ggplot(data = highprotcor, aes (x = meanrow, y = correlation))+
   geom_point()+
   labs (title = "Correlation increase with protein expression", x= "Mean protein expression per gene", y = "Correlation")+
-  stat_poly_eq()+
+  ggpubr::stat_cor(aes(shape = NULL, col= NULL, fill = NULL))+
   stat_poly_line()+
   theme_bw()
 
+dev.off()
 
 cor.test(highprotcor$meanrow, highprotcor$correlation)
 rm(highprotexprplot, highprotcor, GLASS_filtered)
@@ -215,12 +234,15 @@ protzerocountsplot <- protzerocounts %>%
 protzerocountscor <- left_join(protzerocountsplot, corRNAprotNASPEAR, by = c("gene_name" = "gene")) %>% 
   dplyr::mutate(correlation.rnd = NULL)
 
+pdf("Corincreaseprotzero.pdf", height = 4, width = 6)
 ggplot(data = protzerocountscor, aes (x = log(1+zeros), y = correlation))+
   geom_point()+
   labs (title = "Correlation increase with protein zero counts", x= "Number of zero counts per gene (1+log(counts))", y = "Correlation")+
-  stat_poly_eq()+
+  ggpubr::stat_cor(aes(shape = NULL, col= NULL, fill = NULL))+
   stat_poly_line()+
   theme_bw()
+
+dev.off()
 
 cor.test(protzerocountscor$zeros, protzerocountscor$correlation)
 rm(protzerocounts, protzerocountsplot, filteredentries_rawprotein, protzerocountscor)
@@ -295,11 +317,23 @@ RNARNAprothigh <- RNARNAprothigh %>%
 
 
 #corrplot RNA protein
+
+pdf("Corrplot.pdf", width = 8, height = 8)
 corrplot(cor(as.data.frame(t(protRNAprothighNA[1:100,])), as.data.frame(t(RNARNAprothigh[1:100,])), 
              use = "pairwise.complete.obs", method = "spearman"), order = "hclust", tl.cex = 0.4)
-mtext(text = "Proteome", side = 2, line = -19, cex = 3.6)
-mtext(text = "Transcriptome", side = 1, line =-47.5, cex = 3.6)
+mtext(text = "Proteome", side = 2, line = -36, cex = 1.5)
+mtext(text = "Transcriptome", side = 1, line =-33, cex = 1.5)
 
+dev.off()
+
+
+pdf("Corrplot.pdf", width = 11, height = 11)
+corrplot(cor(as.data.frame(t(protRNAprothighNA[1:100,])), as.data.frame(t(RNARNAprothigh[1:100,])), 
+             use = "pairwise.complete.obs", method = "spearman"), order = "hclust", tl.cex = 0.4)
+mtext(text = "Proteome", side = 2, line = -51, cex = 2)
+mtext(text = "Transcriptome", side = 1, line =-47.5, cex = 2)
+
+dev.off()
 
 #corrplot RNARNA
 corrplot(cor(as.data.frame(t(RNARNAprothigh[1:100,])), use = "pairwise.complete.obs", method = "spearman"), order = "hclust", tl.cex = 0.4)
@@ -396,3 +430,8 @@ mostabundant_prot<- tmpprot %>%
   dplyr::slice_head(n=20) %>% 
   dplyr::mutate(mad=NULL)
 
+
+
+mean(corKUSTER$correlation)
+
+clustersprotRNA2

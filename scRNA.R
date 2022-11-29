@@ -424,14 +424,17 @@ map(paste0("PC_", 1:16), function(pc){
 print(LGG_Astro1[["pca"]], dims = 1:5, nfeatures = 5)
 
 #astrocyte markers
+pdf("Astrocyte_markers.pdf", height = 7, width =7)
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
             features = c("GFAP","SLC1A2", "ACSBG1", "SLC1A3","GJA1","AQP4"), 
             sort.cell = TRUE,
             min.cutoff = 'q10', 
             label = TRUE)
-
+dev.off()
 #oligodendrocyte markers
+pdf("Oligo_markers.pdf", height = 7, width =7)
+
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
             features = c("MBP","MOG", "MAG", "TMEM144", "SOX10"), 
@@ -439,7 +442,9 @@ FeaturePlot(LGG_Astro1,
             min.cutoff = 'q10', 
             label = TRUE)
 
+dev.off()
 #OPC
+pdf("OPC_tumor_markers.pdf", height = 5, width = 7)
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
             features = c("NEU4", "TNR","EPN2", "OLIG1"), 
@@ -447,22 +452,25 @@ FeaturePlot(LGG_Astro1,
             min.cutoff = 'q10', 
             label = TRUE)
 
+dev.off()
 #Tumor
+pdf("Tumor_markers.pdf",height = 5, width = 7)
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
             features = c("ETV1","MYC", "EGFR", "ETNPLL", "OLIG1"), 
             sort.cell = TRUE,
             min.cutoff = 'q10', 
             label = TRUE)
-
+dev.off()
 #Macrophages, $ TAM 
+pdf("TAM_markers.pdf", height = 7, width = 7)
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
             features = c("CD163", "CD14", "ITGB2", "C1QC", "CD68", "NAAA"), 
             sort.cell = TRUE,
             min.cutoff = 'q10', 
             label = TRUE)
-
+dev.off()
 #T-cells not found
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
@@ -472,13 +480,14 @@ FeaturePlot(LGG_Astro1,
             label = TRUE)
 
 #Endothelial cells 
+pdf("Endothelial_cells.pdf", height = 7, width = 7)
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
             features = c("PECAM1", "EGFL7", "ID3", "FLT1", "GNG11", "MCAM"), 
             sort.cell = TRUE,
             min.cutoff = 'q10', 
             label = TRUE)
-
+dev.off()
 
 
 FeaturePlot(LGG_Astro1, 
@@ -578,8 +587,8 @@ LGG_Astro1_labeled <- RenameIdents(LGG_Astro1,
                                    "10" = "TAM",
                                    "11" = "Endothelial cells"
                                    )
-
-DimPlot(object = LGG_Astro1_labeled,
+pdf("Cell", height = 7, width = 9)
+DimPlot(object = LGG_Astro1,
         reduction = "umap",
         label = T,
         pt.size = 0.5,
@@ -587,6 +596,7 @@ DimPlot(object = LGG_Astro1_labeled,
         label.size = 5)
 
 
+dev.off()
 write_rds(LGG_Astro1, file = "LGG_Astro1.rds")
 
 write_rds(LGG_Astro1_labeled, file = "LGG_Astro1_labeled.rds")
@@ -622,7 +632,7 @@ a <- read.delim("data/GSE103224_Yuan/GSM2758471_PJ016.filtered.matrix.txt", stri
 ##########CHECK HIGH CORRELATING GENES IN SCRNA DATA
 
 
-FeaturePlot(LGG_Astro1, 
+FeaturePlot(LGG_Astro1_labeled, 
             reduction = "umap", 
             features = c("ANXA2","HSPB1", "VIM", "ANXA1", "S100A6", "TMPO", "VAT1", "RELA", "FLNA", "LUM", "PDIA4", "SCIN", "LAP3"), 
             sort.cell = TRUE,
@@ -630,11 +640,18 @@ FeaturePlot(LGG_Astro1,
             label = TRUE)
 
 
-VlnPlot(LGG_Astro1, features = c("ANXA2","HSPB1", "VIM", "ANXA1", "S100A6", "TMPO", "VAT1", "RELA", "FLNA", "LUM", "PDIA4", "SCIN", "LAP3"), y.max = 5)
+VlnPlot(LGG_Astro1_labeled, features = c("ANXA2","HSPB1", "VIM", "ANXA1", "S100A6", "TMPO", "VAT1", "RELA", "FLNA", "LUM", "PDIA4", "SCIN", "LAP3"), y.max = 5)
 
 
-VlnPlot(LGG_Astro1, features = clustersprotRNA2[21:30], y.max = 5)
+VlnPlot(LGG_Astro1_labeled, features = clustersprotRNA2[1:13], y.max = 3)
 
+
+DotPlot(LGG_Astro1_labeled, features = clustersprotRNA3)+ RotatedAxis()
+
+
+DotPlot(LGG_Astro1_labeled, features = clustersprotRNA2)+ RotatedAxis()
+
+DotPlot(LGG_Astro1_labeled, features = clustersprotRNA1)+ RotatedAxis()
 
 FeaturePlot(LGG_Astro1, 
             reduction = "umap", 
@@ -642,4 +659,25 @@ FeaturePlot(LGG_Astro1,
             sort.cell = TRUE,
             min.cutoff = 'q10', 
             label = TRUE)
+
+
+#PLP1
+
+FeaturePlot(LGG_Astro1_labeled, 
+            reduction = "umap", 
+            features = c("PLP1","PLLP", "MBP", "MAG"), 
+            sort.cell = TRUE,
+            min.cutoff = 'q10', 
+            label = TRUE)
+
+pdf("oligo_down_prot.pdf", width = 8, height = 8)
+
+
+
+VlnPlot(LGG_Astro1_labeled, features = c("PLP1","PLLP", "MBP", "MAG"), ncol = 2, y.max = 6)
+
+dev.off()
+
+DotPlot(LGG_Astro1_labeled, features = corrnatot$gene[151:200])+ RotatedAxis()
+
 
